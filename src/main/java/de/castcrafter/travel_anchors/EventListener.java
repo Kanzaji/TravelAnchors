@@ -4,6 +4,7 @@ import de.castcrafter.travel_anchors.config.ClientConfig;
 import de.castcrafter.travel_anchors.network.ClientEventSerializer;
 import io.github.noeppi_noeppi.libx.event.ClickBlockEmptyHandEvent;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Hand;
@@ -96,10 +97,14 @@ public class EventListener {
     @SubscribeEvent
     @OnlyIn(Dist.CLIENT)
     public void onSneak(InputUpdateEvent event) {
-        if (Minecraft.getInstance().player != null && Minecraft.getInstance().gameSettings.keyBindSneak.isPressed()) {
+        ClientPlayerEntity player = Minecraft.getInstance().player;
+        if (player == null || player.isSpectator() || !player.isAlive() || player.movementInput == null)
+            return;
+
+        if (player.movementInput.sneaking) {
             if (!ClientConfig.DISABLE_ELEVATE.get()) {
-                if (TeleportHandler.canElevate(Minecraft.getInstance().player)) {
-                    TravelAnchors.getNetwork().sendClientEventToServer(Minecraft.getInstance().player.getEntityWorld(), ClientEventSerializer.ClientEvent.SNEAK);
+                if (TeleportHandler.canElevate(player)) {
+                    TravelAnchors.getNetwork().sendClientEventToServer(player.getEntityWorld(), ClientEventSerializer.ClientEvent.SNEAK);
                 }
             }
         }
